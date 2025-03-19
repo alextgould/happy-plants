@@ -1,5 +1,54 @@
 
-17/3/25 - Research
+# About
+
+This file is for keeping assorted notes along the way, which may be useful in later blog / documentation, retracing steps to debug or recreate similar in the future etc
+
+# To Do
+
+A place to park ideas for future work, to allow me to better focus on the task at hand
+
+  - mlflow - for tracking model performance over time
+  - pydantic - for structured config management
+  - terraform folder
+  - what happens if the BOM change their forecast page html? need a way to pick this up (python error handling and/or check data looks reasonable) and notify that things are broken (part of the automation script phase of the project)
+  - more generally, go over everything with an error handling perspective (may be overkill for a project designed to demonstrate familiarity with tools such as terraform rather than python web scraping)
+
+# Historical notes
+
+These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
+
+## Repo Structure
+
+Decided to see how well ChatGPT would fare with suggesting a structure. Prompt: 
+
+```
+I am creating a repo for a project called "Happy Plants: A data-driven predictive watering notification system". I have a brief description of the project as follows:
+
+Project aim
+The goal of this project is to build a system that will notify me when it's a good time to manually water my plants.
+
+In order to this, we will:
+
+* use APIs and web scraping tools to gather historical and forecast rainfall data for my local area (Sydney)
+
+* save the data into an sqlite database
+
+* train a reinforcement learning model to predict when is the best time to manually water the plants
+
+* use automation tools to ensure the data is gathered automatically on a daily basis and the model constantly improved as more data is obtained
+
+We may also
+
+* bootstrap the process with some synthetic data (noting that there isn't a history of forecasts, only of actual rainfall)
+
+* host the system on AWS or GCP
+
+* use terraform to create a reproducable infrastructure model that others can use to deploy the system
+
+To start with, give me a few thoughts about how I might structure my python code within this repo to suit the various aims. For example, I could have my code in a folder, named...? I could have a .py file for scraping the data and a separate one for training the RL model? I could use Jupyter notebooks when sourcing the data and/or prototyping this, but have a .py file that will be easier to use with automation tools? I could set up my RL model in a particular manner to allow for future automation, training etc, and this would involve...? I'm really just after ideas for setting things up in a way that will allow the project to evolve efficiently.
+```
+
+## Initial Research
 
 https://github.com/ropensci-archive/bomrang?tab=readme-ov-file - bomrang package was an R package but has been archived due to "BOM's ongoing unwillingness to allow programmatic access to their data and actively blocking any attempts made using this package or other similar efforts"
 https://docs.ropensci.org/weatherOz/ - R package that faciliates access to climate data from 3 sources including BOM FTP server
@@ -87,6 +136,11 @@ can't use incognito session with current settings as not https
 
 Try visiting the site again tomorrow and see if the p_c parameter changes
 
+http://www.bom.gov.au/jsp/ncc/cdio/weatherData/av?p_nccObsCode=136&p_display_type=dailyDataFile&p_startYear=2024&p_c=-872184033&p_stn_num=66037
+http://www.bom.gov.au/jsp/ncc/cdio/weatherData/av?p_nccObsCode=136&p_display_type=dailyDataFile&p_startYear=2023&p_c=-872184033&p_stn_num=66037
+
+Note the p_c value has changed, so may need to browse to the URL without p_c and then look at a return value to allow for extracting more... or just keep the history in the database so we're only ever querying the latest year once
+
 ## Reasonable benchmark for required mm of rain
 
 ### ChatGPT professional opinion
@@ -111,3 +165,10 @@ Each day, get a negative reward if mm of rainfall in past week + any manual wate
 Need to look at the drip hose and estimate how many mm of water will come from a 30 minute session of watering. 
 
 Then need a negative reward for asking to manually water, which needs to be calibrated based on user_lazy_score
+
+## SQLAlchemy
+
+Came across this while looking at an idempotent solution, to avoid duplicates in my data if the function gets run multiple times, or includes historical data that is already in the database. From ChatGPT:
+
+* It allows you to write database-agnostic code. With SQLAlchemy, you can easily switch between different databases (e.g., SQLite, PostgreSQL, MySQL) by just changing the connection string, without needing to rewrite the SQL queries.
+* SQLAlchemy provides features to help prevent SQL injection attacks by automatically escaping inputs in queries and using prepared statements.
