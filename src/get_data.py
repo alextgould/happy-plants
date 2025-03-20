@@ -1,11 +1,13 @@
+"""
+This script uses BeautifulSoup to scrape the public historical and forecast rainfall data from the BOM site,
+saving it into a pandas dataframe with formatted dates.
+"""
 
 import requests
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
 from datetime import datetime
-import logging
-logger = logging.getLogger(__name__)
 
 # General functions
 
@@ -54,8 +56,8 @@ def _convert_to_datetime(date_str, current_date=None):
         if forecast_date < current_date:
             forecast_date = forecast_date.replace(year=current_year + 1)
 
-    # format as d/m/y
-    return current_date.strftime('%d/%m/%y'), forecast_date.strftime('%d/%m/%y')
+    # format as yyyymmdd
+    return current_date.strftime('%Y-%m-%d'), forecast_date.strftime('%Y-%m-%d')
 
 def _extract_forecast_data(soup):
     """Extract rainfall chance and amounts from the Beautiful Soup class"""
@@ -84,8 +86,8 @@ def _extract_forecast_data(soup):
         results.append([date_forecast_was_made, date_forecast_applies_to, rain_chance, rain_mm_low, rain_mm_high])
 
     df = pd.DataFrame(results, columns=['date_forecast_was_made', 'date_forecast_applies_to', 'rain_chance', 'rain_mm_low', 'rain_mm_high'])
-    df['date_forecast_was_made'] = pd.to_datetime(df['date_forecast_was_made'], format='%d/%m/%y')
-    df['date_forecast_applies_to'] = pd.to_datetime(df['date_forecast_applies_to'], format='%d/%m/%y')
+    df['date_forecast_was_made'] = pd.to_datetime(df['date_forecast_was_made'], format='%Y-%m-%d')
+    df['date_forecast_applies_to'] = pd.to_datetime(df['date_forecast_applies_to'], format='%Y-%m-%d')
 
     return df
 
@@ -136,12 +138,12 @@ def _extract_historical_data(soup):
     for i, (day, *values) in enumerate(data):
         day_number = int(day[:-2]) # remove 'st', 'nd' etc
         for month_number, value in enumerate(values):
-            date = datetime(int(year), month_number + 1, day_number).strftime('%d/%m/%y') # add year and format as dd/mm/yy
+            date = datetime(int(year), month_number + 1, day_number).strftime('%Y-%m-%d') # add year and format as yyyymmdd
             daily_data.append([date, value])
 
     # convert data to dataframe for ease of filtering etc
     df = pd.DataFrame(daily_data, columns=['date', 'rainfall_mm'])
-    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%y')
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     df = df.sort_values(by='date', ascending=True)
     return df
 
