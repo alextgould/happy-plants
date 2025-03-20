@@ -4,11 +4,13 @@ from bs4 import BeautifulSoup
 import re
 import pandas as pd
 from datetime import datetime
+import logging
+logger = logging.getLogger(__name__)
 
 # General functions
 
 def _get_page_source(url):
-    '''returns page source from url (pretending to be a Chrome browser)'''
+    """Return page source from url (pretending to be a Chrome browser)"""
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
@@ -23,14 +25,19 @@ def _get_page_source(url):
 # Forecast data functions
 
 def _convert_to_datetime(date_str, current_date=None):
-    '''Converts strings from forecast html (e.g. 'Friday 21 March') into datetime (e.g. 21/3/25)
-    
-    Keyword args:
-    current_date -- used for testing the function, defaults to today's date
+    """
+    Converts a forecast string (e.g., 'Friday 21 March') into a datetime object
+    and returns the date in 'd/m/y' string format (e.g., '21/3/25').
+
+    Args:
+        date_str (str): The forecast string to be converted (e.g., 'Friday 21 March').
+        current_date (datetime, optional): The current date to use for testing. Defaults to today's date.
 
     Returns:
-    date_forecast_was_made, date_forecast_applies_to -- both in d/m/y string format
-    '''
+        tuple: A tuple containing two strings:
+            - date_forecast_was_made (str): The date the forecast was made, in 'd/m/y' format.
+            - date_forecast_applies_to (str): The date the forecast applies to, in 'd/m/y' format.
+    """
 
     if not current_date:
         current_date = datetime.today().date()
@@ -51,7 +58,7 @@ def _convert_to_datetime(date_str, current_date=None):
     return current_date.strftime('%d/%m/%y'), forecast_date.strftime('%d/%m/%y')
 
 def _extract_forecast_data(soup):
-    '''Extract rainfall chance and amounts from the Beautiful Soup class'''
+    """Extract rainfall chance and amounts from the Beautiful Soup class"""
 
     sections = soup.find_all(class_="day")
     results = []
@@ -83,7 +90,7 @@ def _extract_forecast_data(soup):
     return df
 
 def forecast_data(url = "http://www.bom.gov.au/nsw/forecasts/sydney.shtml"):
-    '''Returns a dataframe containing BOM rainfall forecasts'''
+    """Return a pandas dataframe containing BOM rainfall forecasts"""
 
     src = _get_page_source(url)
     soup = BeautifulSoup(src, 'html.parser') # recommended to include html.parser here to ensure consistent cross-platform results
@@ -93,7 +100,7 @@ def forecast_data(url = "http://www.bom.gov.au/nsw/forecasts/sydney.shtml"):
 # Historical data functions
 
 def _extract_historical_data(soup):
-    '''Extract historical rainfall by date from the Beautiful Soup class'''
+    """Extract historical rainfall by date from the Beautiful Soup class"""
 
     # Extract the year (from th with scope="col")
     year = soup.find('th', {'scope': 'col'}).text.strip()
@@ -139,7 +146,7 @@ def _extract_historical_data(soup):
     return df
 
 def historical_data(base_url = "http://www.bom.gov.au/jsp/ncc/cdio/weatherData/av", p_nccObsCode=136, p_display_type="dailyDataFile", p_stn_num=66037):
-    '''Returns a dataframe containing BOM historical rainfall data'''
+    """Return a dataframe containing BOM historical rainfall data"""
 
     # probably overkill to parameterise this, but on the off chance someone wants to clone and run it using a different weather station...
     url = f"{base_url}?p_nccObsCode={p_nccObsCode}&p_display_type={p_display_type}&p_stn_num={p_stn_num}"

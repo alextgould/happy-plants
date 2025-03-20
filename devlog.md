@@ -12,10 +12,21 @@ A place to park ideas for future work, to allow me to better focus on the task a
   - terraform folder
   - what happens if the BOM change their forecast page html? need a way to pick this up (python error handling and/or check data looks reasonable) and notify that things are broken (part of the automation script phase of the project)
   - more generally, go over everything with an error handling perspective (may be overkill for a project designed to demonstrate familiarity with tools such as terraform rather than python web scraping)
+  - revisit the add_src_to_path.py issue, with src not being treated as a module even if __init__.py is included in it
 
 # Historical notes
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
+
+## Email notifications
+
+Started looking through [https://realpython.com/python-send-email/](https://realpython.com/python-send-email/) 
+
+Initial thoughts are
+* likely need to set up a new gmail account
+* probably worth looking at the OAuth2 credentials process
+* add dotenv with password
+
 
 ## Repo Structure
 
