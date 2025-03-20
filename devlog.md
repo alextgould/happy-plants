@@ -14,10 +14,50 @@ A place to park ideas for future work, to allow me to better focus on the task a
   - more generally, go over everything with an error handling perspective (may be overkill for a project designed to demonstrate familiarity with tools such as terraform rather than python web scraping)
   - revisit the add_src_to_path.py issue, with src not being treated as a module even if __init__.py is included in it
   - consider whether to adjust code to allow for intra-day data collection in the database (with optional parameter driving this) e.g. for collecting data every 1 hour for a week in order to understand a) how often they update forecasts (both time of day and frequency within the day and whether it's regular (automated) or not (manual) b) how "rest of day" forecasts change in response to actual weather events on the forecast day (i.e. if it rains half way through the day and then clears up, will the forecast amount reduce to zero as it's already rained or will the forecast amount approach the actual amount as the day progresses)
-
+  
 # Historical notes
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
+
+## Modelling approach
+
+Approach
+* pick up the historical days leading up to the forecast day
+* pick up all forecast_applies_to data for the date_forecast_was_made day
+* Flatten both of these, using the difference between the date and the forecast date to produce an index
+* Then keep the relevant ones (e.g. past X days, next Y days)
+* "feature selection" e.g. if the success criteria is 20mm per week, add up the watering for the past 6 days
+as this is guaranteed (and includes adjustments for assumed action taken following prior watering notifications)
+and/or add up some expected rainfall (e.g. rain_chance * average of rain_mm_low and rain_mm_high, for next 1 day or possibly 
+each future day. 
+Relevance of this aspect might depend on what model(s) I'm using. In the short term we might go with something super simple
+(e.g. just use actual past 6 days + expected for next 2 days and issue notification if <20mm), particularly while
+collecting/generating data and setting up notification flow
+
+Assumptions / Areas of uncertainty
+* include current day forecast?
+  - time of day that the program is run (e.g. running at the start of the day vs at the end of the day)
+  - time of day that the forecasts are released (e.g. is this 9am? 6am? 12am? are they updated throughout the day? on an hourly basis?)
+  - wording implies it's for the remainder of the day which could be misleading (e.g. it rains all morning, then forecast is 0.0)
+  - ideal time of day to run this might depend on when the user is going to take action (e.g. free to water at 7am vs 10am vs 6pm)
+* assume that past notifications resulted in watering at the required amount (need to overwrite historical data after extracting it)
+
+Note on the forecast page
+http://www.bom.gov.au/nsw/forecasts/sydney.shtml
+it actually has e.g. 
+"Forecast issued at 4:20 pm EDT on Thursday 20 March 2025."
+so looking at this page a few times manually will probably give sufficient info to get a feeling for this
+particularly if it's a day where it's been raining and clears up
+
+At 7am, 9am:
+Forecast issued at 4:45 am EDT on Friday 21 March 2025.
+70% chance of rain with 0 to 7 mm of rain
+
+At 10am:
+Forecast updated at 9:29 am EDT on Friday 21 March 2025.
+70% chance of any rain, does not show the possible rainfall figures
+
+Might actually be more sensible to include forecast rainfall from yesterday for today, then use forecast rainfall for future days from today (a bit complicated but possibly the most appropriate approach)
 
 ## Research - dates in databases
 
@@ -46,6 +86,15 @@ Once you have a logger set up in each module, you can use it to log messages.
 
 Note: in practice, you will often use logger.debug() in larger applications to ensure you have control over where logs are coming from, but logging.debug() is a useful shortcut for simple scenarios where you don't need to create a logger.
 ```
+
+Using 
+```python
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+```
+Adds timestamps and makes it easier to understand logs with similar values being appended over time (e.g. collect_data.py being run every day)
+
+Reflection:
+It's all working and I better understand the options now. I'm still on the fence with regard to whether it's better to configure the log destination in TS/cron vs within python. When developing, it feels nice to be able to run the script in a terminal and see the logging output and not have to open the log file. I'm also of two minds about whether it's good to have a block of ~10 lines of complex code to set up the logger properly and add src folder to the path, having to copy this code between scripts, vs having this be part of the TS/cron stage and/or having a central script (e.g. config.py) that can be called by the other scripts so this complexity is hidden away and can be adjusted/copied between projects more easily. It feels good to be able to customise the logging levels at each script and only have it direct to a file once the script is essentially done. Lots of options and tradeoffs to consider.
 
 ## Research - avoiding SQL injection
 
@@ -90,7 +139,7 @@ Placeholders: You replace ? with $1, $2, $3, and so on. These placeholders repre
 ON CONFLICT clause: In PostgreSQL, if you want to do an "upsert" (insert or update if a conflict occurs), you would typically use the ON CONFLICT clause, which handles conflicts on a unique or primary key (like (model, date) here). This is similar to SQLite’s INSERT OR REPLACE, but the syntax differs.
 ```
 
-## Research - cron, task scheduler and systemd
+## Research - task scheduler, cron and systemd
 
 Edited ChatGPT output:
 ```
@@ -107,7 +156,6 @@ Set Working Directory (Optional but Recommended) - In "Create Task" → "Actions
 Run with the Correct User Permissions - If your script needs admin privileges or access to certain files, check "Run with highest privileges".
 Save & Test - Right-click the task → "Run" to test.
 
-
 You can configure Task Scheduler to run missed executions if the computer was off.
 Find your task, or create a new one.
 Go to the Settings tab.
@@ -123,6 +171,40 @@ Modify the "Add arguments" field when setting up the task:
 Method 2: Enable Task History
 In Task Scheduler, click "Enable All Task History" (on the right panel).
 Right-click your task → "Properties" → "History" tab to check past runs.
+
+Notes from doing this in practice:
+* Point the executable to the python.exe in the virtual environment 
+* Use quotes if there’s any possibility of spaces
+* Backslashes (\) are standard for Windows, but forward slashes (/) also work
+* Anecdotally, Start In (Working Directory) does not accept quoted paths. If you add quotes, Task Scheduler may fail to execute the task.
+* In "add arguments", paths with spaces must be quoted in the arguments field because it treats them as separate parameters otherwise
+
+Create Task - General
+* Name: gather_rainfall_data
+* Triggers: Daily, starting today at 7:30am
+* Actions: 
+Program/script: C:\.venv\happy_plants\Scripts\python.exe 
+Add arguments: "D:\Projects\happy-plants\scripts\collect_data.py" >> "D:\Projects\happy-plants\scripts\taskschd.log" 2>&1
+Start in: D:\Projects\happy-plants
+* Conditions: Network - start only if my wifi network connection is available
+* Setting:
+check "Run task as soon as possible after a scheduled start is missed"
+check "If the task fails, restart every" and set to 2 hours (in case of internet outage)
+adjust "Stop the task if it runs longer than" to "1 day" (3 days seems a bit excessive)
+and/or adjust "If the task is already running, then the following rule applies" to "Stop the existing instance" (given default is to allow task to run for 3 days)
+
+check/debug:
+C:\.venv\happy_plants\Scripts\python.exe "D:\Projects\happy-plants\scripts\collect_data.py" >> "D:\Projects\happy-plants\scripts\taskschd.log" 2>&1
+DOES NOT OUTPUT LOGS - because the >> redirect works in cmd.exe not in python.exe
+cmd.exe /c C:\.venv\happy_plants\Scripts\python.exe "D:\Projects\happy-plants\scripts\collect_data.py" >> "D:\Projects\happy-plants\scripts\taskschd.log" 2>&1
+note /c tells cmd.exe to run a command and exit
+
+Once task is created you can see it under "Task Scheduler Library"
+
+Notes
+* You need to manually right click Task Scheduler Library and Refresh to see e.g. Status "Ready"
+
+
 
 ---------------
 
@@ -381,3 +463,6 @@ Came across this while looking at an idempotent solution, to avoid duplicates in
 
 * It allows you to write database-agnostic code. With SQLAlchemy, you can easily switch between different databases (e.g., SQLite, PostgreSQL, MySQL) by just changing the connection string, without needing to rewrite the SQL queries.
 * SQLAlchemy provides features to help prevent SQL injection attacks by automatically escaping inputs in queries and using prepared statements.
+
+(but do I miss out on the understanding by abstracting things?)
+(how often do you change from one SQL / DB to another and need to rewrite things vs having to learn SQLAlchemy and have other devs be familiar with it?)

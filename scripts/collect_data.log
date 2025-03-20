@@ -1,0 +1,58 @@
+2025-03-21 09:54:30 - DEBUG - log_file being written to D:\Projects\happy-plants\scripts\collect_data.log
+2025-03-21 09:54:30 - DEBUG - appending D:\Projects\happy-plants\src to sys.path so that modules in /src directory can be imported
+2025-03-21 09:54:31 - DEBUG - Starting new HTTP connection (1): www.bom.gov.au:80
+2025-03-21 09:54:31 - DEBUG - http://www.bom.gov.au:80 "GET /nsw/forecasts/sydney.shtml HTTP/1.1" 200 7899
+2025-03-21 09:54:31 - DEBUG - Starting new HTTP connection (1): www.bom.gov.au:80
+2025-03-21 09:54:31 - DEBUG - http://www.bom.gov.au:80 "GET /jsp/ncc/cdio/weatherData/av?p_nccObsCode=136&p_display_type=dailyDataFile&p_stn_num=66037 HTTP/1.1" 200 12394
+2025-03-21 09:54:31 - DEBUG - New forecast data:   date_forecast_was_made date_forecast_applies_to  rain_chance  rain_mm_low  rain_mm_high
+0             2025-03-21               2025-03-21          0.7            0             0
+1             2025-03-21               2025-03-22          0.5            0             1
+2             2025-03-21               2025-03-23          0.6            0             3
+3             2025-03-21               2025-03-24          0.5            0             2
+4             2025-03-21               2025-03-25          0.5            0             3
+5             2025-03-21               2025-03-26          0.6            0             5
+6             2025-03-21               2025-03-27          0.7            0            15
+2025-03-21 09:54:31 - DEBUG - New historical data:          date rainfall_mm
+0  2025-01-01           0
+3  2025-01-02           0
+6  2025-01-03         4.8
+9  2025-01-04         0.2
+12 2025-01-05           0
+..        ...         ...
+47 2025-03-16           0
+50 2025-03-17           0
+53 2025-03-18           0
+56 2025-03-19           0
+59 2025-03-20           0
+
+[79 rows x 2 columns]
+2025-03-21 09:54:31 - DEBUG - Forecast data now in the database:    date_forecast_was_made date_forecast_applies_to  rain_chance  rain_mm_low  rain_mm_high
+0              2025-03-20               2025-03-20         0.05          0.0           0.0
+1              2025-03-20               2025-03-21         0.70          0.0           7.0
+2              2025-03-20               2025-03-22         0.50          0.0           1.0
+3              2025-03-20               2025-03-23         0.60          0.0           3.0
+4              2025-03-20               2025-03-24         0.50          0.0           2.0
+5              2025-03-20               2025-03-25         0.50          0.0           3.0
+6              2025-03-20               2025-03-26         0.60          0.0           5.0
+7              2025-03-20               2025-03-27         0.70          0.0          15.0
+8              2025-03-21               2025-03-21         0.70          0.0           0.0
+9              2025-03-21               2025-03-22         0.50          0.0           1.0
+10             2025-03-21               2025-03-23         0.60          0.0           3.0
+11             2025-03-21               2025-03-24         0.50          0.0           2.0
+12             2025-03-21               2025-03-25         0.50          0.0           3.0
+13             2025-03-21               2025-03-26         0.60          0.0           5.0
+14             2025-03-21               2025-03-27         0.70          0.0          15.0
+2025-03-21 09:54:31 - DEBUG - Historical data now in the database:          date  rainfall_mm
+0  2025-01-01          0.0
+1  2025-01-02          0.0
+2  2025-01-03          4.8
+3  2025-01-04          0.2
+4  2025-01-05          0.0
+..        ...          ...
+74 2025-03-16          0.0
+75 2025-03-17          0.0
+76 2025-03-18          0.0
+77 2025-03-19          0.0
+78 2025-03-20          0.0
+
+[79 rows x 2 columns]
