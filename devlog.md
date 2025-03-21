@@ -19,6 +19,36 @@ A place to park ideas for future work, to allow me to better focus on the task a
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
 
+## Cleaning up debug logging
+
+Something to ponder about further:
+
+```chatGPT
+When people use logger.debug while creating their code, do they tend to delete a lot of these once their code is working? and/or comment it out?
+ChatGPT said:
+It depends on the developer and the project, but there are a few common patterns:
+
+Leaving Debug Logs in Place – Many developers keep logger.debug statements in their code, especially in complex logic, so they can enable debug logging later if needed. Since logging frameworks usually allow adjusting the logging level dynamically (e.g., setting INFO or WARNING in production), debug logs can stay without affecting performance.
+
+Removing Unnecessary Logs – Some developers clean up excessive debug logs once the code is stable, particularly if they were only useful for initial debugging. This helps keep the codebase cleaner and avoids unnecessary log noise.
+
+Commenting Out Logs – Some people comment out debug statements instead of deleting them, just in case they need them later. This is more common in less formal workflows but is generally discouraged because commented-out code can clutter the codebase.
+
+Using Conditional Debugging – Instead of removing debug logs, developers sometimes wrap them in conditions (e.g., if some_debug_flag: logger.debug(...)). This allows selective logging without modifying the code.
+
+Best practice is to keep useful logger.debug statements but ensure logging is configured properly so they don’t pollute production logs.
+```
+
+## User snippets
+
+F1 > Snippets > Configure snippets e.g.
+
+	"Log Debug Statement": {
+		"prefix": "log",
+		"body": "logger.debug(f\"$1 {}\")",
+		"description": "Insert a logger.debug statement"
+	}
+
 ## Modelling approach
 
 Approach
@@ -57,6 +87,10 @@ At 10am:
 Forecast updated at 9:29 am EDT on Friday 21 March 2025.
 70% chance of any rain, does not show the possible rainfall figures
 
+At 2pm:
+Forecast updated at 11:09 am EDT on Friday 21 March 2025.
+70% chance of any rain
+
 Might actually be more sensible to include forecast rainfall from yesterday for today, then use forecast rainfall for future days from today (a bit complicated but possibly the most appropriate approach)
 
 ## Research - dates in databases
@@ -69,6 +103,11 @@ ISO 8601 defines a standardized format for representing dates, and both %Y-%m-%d
 
 Example: 2025-03-20
 %Y/%m/%d (with slashes) is also a valid date format, but it is less commonly used in ISO 8601-compliant systems. It's more of a regional format, often used in some European and North American contexts, but not the canonical ISO 8601 format.
+
+For pandas calculations, having dates in datetime format yyyy-mm-dd 00:00:00 is useful. I'm undecided if it makes sense to store the 00:00:00, considerations:
+  - outputs are more verbose
+  - would need to test filtering e.g. does something like "= 'yyyy-mm-dd'" still work or do you need "= 'yyyy-mm-dd 00:00:00'"
+  - currently using date as PK so process is idempotent for forecasts within a given day. would likely need to remove prior ones on rerun within a given day, or just fix the time component to 00:00:00 regardless of when it's actually run
 
 ## Research - logging
 
