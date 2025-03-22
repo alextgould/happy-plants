@@ -14,6 +14,7 @@ A place to park ideas for future work, to allow me to better focus on the task a
   - more generally, go over everything with an error handling perspective (may be overkill for a project designed to demonstrate familiarity with tools such as terraform rather than python web scraping)
   - revisit the add_src_to_path.py issue, with src not being treated as a module even if __init__.py is included in it
   - consider whether to adjust code to allow for intra-day data collection in the database (with optional parameter driving this) e.g. for collecting data every 1 hour for a week in order to understand a) how often they update forecasts (both time of day and frequency within the day and whether it's regular (automated) or not (manual) b) how "rest of day" forecasts change in response to actual weather events on the forecast day (i.e. if it rains half way through the day and then clears up, will the forecast amount reduce to zero as it's already rained or will the forecast amount approach the actual amount as the day progresses)
+  - consider whether to share the data folder; not usually done but in this case it takes time to build up a history of forecast data and someone wanting to play with the system might not want to sit on it for 3 months locally. might be worth having a separate location with a copy of the data used for training the models that can also be used if someone wants to play around more generally
   
 # Historical notes
 
@@ -34,6 +35,14 @@ Another place to jot down some things I might want to talk about later
   - initial blog post as "career plan", but this is a live document, so I have a conversation and make a change and went back and adjusted my post to reflect this, but at some point I have to draw the line and accept that it's a historical artifact
 
   - learning about best/better practices for docstrings, finding/improving my own style over time, resisting the urge to go back and rework all my docstrings (or deciding to do so, at some cost but to ensure anyone looking at the code gets the best/most accurate impression of where I'm now at)
+
+* Why is it useful to have all 7 days of forecast data if we're just going to look at the past 6 days and make some judgement about the chance of rain today? Well actually, if my plants haven't had water in 6 days and it's not raining today, but it IS raining tomorrow, I probably won't bother raining today. A RL model can take into account my (custom, high) level of laziness and potentially make this judgement call on my behalf, whereas a simple rule based system won't. A regular machine learning algorithm also won't take this approach, unless I build it into my target variable somehow, in which case why not just apply the simple rule based approach? OK so I've justified the potential (probably small) benefit of using RL, but why bother using a ML algorithm here? I guess we expect that it will handle the probabilities involved, and for example, the forecasts may consistently be wrong, for example they may overstate the chance of rain to avoid people being grumpy if they say it won't rain, but this may mean our model should suggest watering even if the chance is 80%, because they always say it's 80% when it's actually 40%.
+
+* This post is the first in a series relating to the Happy Plants project. ... This first post will cover everything involved in building a data-driven notification system on my local Windows computer. This includes features such as using web scraping to source the data, saving the data in a database, processing the data to be ready for the algorithm to make a decision, the ability to send email notifications, and automation using Windows Task Scheduler to run everything on a daily basis.
+  * Later posts will cover moving the application to a cloud provider, using machine learning algorithms, and potentially testing/comparing algorithm performance.
+  * (maybe don't include all the details below in the first post, until the work itself has been done)
+  * The second post will cover everything involved in moving the system into the cloud. This includes features such as AWS (or GCP) basics, Terraform (or similar), and automation using Linux cron (or systemd) and/or some other CI/CD approach.
+  * The third post will cover a few different machine learning algorithms, including reinforcement learning.
 
 ## Thoughts on real world customisation (for blog)
 

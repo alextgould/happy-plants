@@ -1,11 +1,13 @@
 
 """
-This script receives a recommendation from a model (i.e. manually water today or don't manually water today)
+This script runs through (models) and gets a recommendation (i.e. manually water today or don't manually water today)
 
 It stores this recommendation in the database (so we can assess actual performance in due course) 
 along with the model name (so we can have multiple models running simultaneously and compare their performance)
 
-It also sends emails if the model recommends that we manually water (based on one or more models)
+It sends emails if the model recommends that we manually water (based on one or more models)
+
+This script will move into the daily_run.py script (or be called by it) once it's developed
 """
 
 from datetime import datetime
@@ -18,30 +20,47 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-import database
+import database, prepare_data, pred_models
 
-def process_pred(model: str, pred: int):
+MODELS=['logic']
+
+def daily_pred():
     """
-    Processes a model prediction, adding the prediction data to the database
-    and sending an email if manual watering is required.
+    Get a prediction for whether or not to manually water today (for each model in MODELS list)
+
+    Call process_pred function to save the prediction data in the database (for models to use to avoid watering unnecessarily in the future)
+    and send an email if a positive prediction was made
+    """
+
+    # get model(s) prediction for today
+    current_date = datetime.today().date().strftime('%Y-%m-%d')
+    X = prepare_data.predictor_data_row(forecast_date=current_date)
+    for model in MODELS:
+        if model == 'logic':
+            pred = pred_models.logic(X=X)
+            pred_text = "1 (manually water today)" if pred == 1 else "0 (don't manually water today)"
+            logger.debug(f"model {model} predicted {pred_text}")
+        process_pred(current_date, model, pred)
+
+def process_pred(current_date: str, model: str, pred: int):
+    """
+    Process a model prediction, adding the prediction made to the database and sending an email if manual watering is required.
 
     Args:
+        current_date (str): today's date in yyyy-mm-dd format
         model (str): A unique name for the model making the prediction
         pred (int): 1 to manually water today, 0 to not manually water today
     """
 
     db = database.RainfallDatabase()
-
-    current_date = datetime.today().date().strftime('%Y-%m-%d')
     db.add_preds_data(model=model, date=current_date, pred=pred)
+    logger.info(f"Added {model} model prediction of {pred} for {current_date} to the database.")
 
-    if pred:
-        #send_email()
+    if pred: # note in Python 0 is falsy and 1 is truthy (along with all other non zero values)
+        send_email(model)
         logger.debug(f"Model {model} predicted we should manually water, need to send an email")
-    else:
-        logger.debug(f"Model {model} predicted no need to water, so no need to send an email")
-
-def send_email():
+    
+def send_email(model=""):
 
     # placeholder based on https://realpython.com/python-send-email/
 
@@ -57,10 +76,10 @@ def send_email():
         sender_email = "my@gmail.com"
         receiver_email = "your@gmail.com"
         password = "your_password_here"  # for local testing, you can skip input
-        message = """\
-        Subject: Hi there
+        message = f"""\
+        Subject: Time to water your plants!
 
-        This message is sent from Python."""
+        The {model} model thinks you should water your plants today. Have a great day!"""
 
         # Set up the server to connect to your local SMTP DebuggingServer
         smtp_server = "localhost"
@@ -76,30 +95,7 @@ def send_email():
         # Stop the server
         process.terminate()
 
-# PLACEHOLDER CODE (ChatGPT)
-
-if False:
-
-    from src.database import get_historical_data
-    from src.rl_model import train_model, predict_watering
-
-    def main():
-        df = get_historical_data()
-        model = train_model(df)
-        should_water = predict_watering(model, df.tail(1))
-        
-        if should_water:
-            print("Time to water your plants!")
-
 if __name__ == "__main__":
 
-    if True: # for testing
-        db = database.RainfallDatabase()
-        db.create_preds_table()
-        process_pred("test model 1", 1)
-        process_pred("test model 2", 0)
-        preds = db.get_preds_data()
-        logger.debug(f"\npreds table:\n{preds}")
-
-    if False: # for testing
-        send_email()
+    if True: # standard operation - run through each model, make a prediction, save data to database and send watering emails
+        daily_pred()
