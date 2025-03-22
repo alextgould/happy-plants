@@ -19,6 +19,32 @@ A place to park ideas for future work, to allow me to better focus on the task a
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
 
+## Notes for blog
+
+Another place to jot down some things I might want to talk about later
+
+* Extensive use of ChatGPT to solve standard problems, which I probably could have figured out myself in the past, but which tends to produce high quality answers quicker than I would have come up with them myself, particularly when utilising abstractions in pandas and similar where I haven't read and memorised the entire docs and things are changing over time. Some examples:
+
+  - To add a column that aggregates the past 7 days in my dataframe I'm using the following, which followed me providing a simple example of what I wanted using Excel: df_historical["rainfall_mm_week"] = df_historical["rainfall_mm"].rolling(window=7, min_periods=7).sum()
+
+  - Initially my database.py had many functions that had something similar at the top, allowing for a custom path. I decided it would be sensible to use a class based structure. While I could have done this myself, it was something that ChatGPT was actually able to do for me essentially instantaneously.
+
+* Tendency to want to revisit things as I learn more - applies to both blog posts and to code. Examples:
+
+  - initial blog post as "career plan", but this is a live document, so I have a conversation and make a change and went back and adjusted my post to reflect this, but at some point I have to draw the line and accept that it's a historical artifact
+
+  - learning about best/better practices for docstrings, finding/improving my own style over time, resisting the urge to go back and rework all my docstrings (or deciding to do so, at some cost but to ensure anyone looking at the code gets the best/most accurate impression of where I'm now at)
+
+## Thoughts on real world customisation (for blog)
+
+I'm conscious that this "simple" problem has a habit of becoming less simple at every turn, if I let myself overthink things. For example:
+
+* I'm assuming that when the model tells someone to manually water, they will do so. In practice, people might get the notification and ignore it, but want further notifications to keep reminding them rather than have their plants die over the coming week if it doesn't rain, or feel they need to water their plants a day or two later when the model would actually tell them not to bother given the delay. A solution to this might be to let the user click something in their email to confirm they've watered it, then in my project I need functionality to record this event and only replace historical data when the user actually watered their plants. None of this is hard, but I need to **not** fall into the trap of doing such things at this point when I'm just trying to demonstrate the basics.
+
+* It's a toy problem, so I can pick up and process the full history. But if it weren't a simple project, perhaps it would be worth my time to filter the history. I'm trying to demonstrate good practices, but probably no-one will actually look at my code or use it for the more complex scenario, so even if it doesn't take long to add this in, I *probably* should refrain from doing so.
+
+* In database.py I have a class which allows the user to flexibly define the location of the database, while also having a default location, and would be relatively straightforward to swap out an sqlite database for something like postgres. It's great that I'm demonstrating my knowledge here, and the product is better, but I'm of two minds whether it would have been better to simply stick to a single database location and format without the flexibility, which is quicker to develop and gets the job done, but doesn't demonstrate my understanding as well
+
 ## Cleaning up debug logging
 
 Something to ponder about further:
