@@ -1,3 +1,10 @@
 data
-.env
 __pycache__
+
+# Google Gmail API credentials
+credentials.json
+token.json
+
+# Placeholder - may not actually need this
+.env
+.env.example

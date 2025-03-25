@@ -24,6 +24,8 @@ These are broadly in reverse chronological order (i.e. oldest stuff is at the bo
 
 Another place to jot down some things I might want to talk about later
 
+* Logs are great, particularly at the point where you want to confirm that your Task Scheduler ran correctly even though you changed the name of the file from collect_data.py to daily_run.py
+
 * Extensive use of ChatGPT to solve standard problems, which I probably could have figured out myself in the past, but which tends to produce high quality answers quicker than I would have come up with them myself, particularly when utilising abstractions in pandas and similar where I haven't read and memorised the entire docs and things are changing over time. Some examples:
 
   - To add a column that aggregates the past 7 days in my dataframe I'm using the following, which followed me providing a simple example of what I wanted using Excel: df_historical["rainfall_mm_week"] = df_historical["rainfall_mm"].rolling(window=7, min_periods=7).sum()
@@ -374,12 +376,410 @@ Dependency Control:	Runs independently	vs Can start after network/db (After=netw
 
 ## Email notifications
 
-Started looking through [https://realpython.com/python-send-email/](https://realpython.com/python-send-email/) 
+Started looking through [https://realpython.com/python-send-email/](https://realpython.com/python-send-email/) and chatting with Copilot. 
 
-Initial thoughts are
-* likely need to set up a new gmail account
-* probably worth looking at the OAuth2 credentials process
-* add dotenv with password
+This is a tricky design decision:
+* Amount of setup time required of me up front
+* Amount of setup time required of someone picking up my codebase/solution
+  - can mitigate somewhat with clear documentation
+* Limitations or costs associated with third party providers
+  - using or not using third party providers has pros/cons for me personally
+    in terms of demonstrable skills
+* Packages included in the requirements.txt to handle APIs
+
+Options:
+* use Gmail with App Passwords ("allow less secure apps" is depreciated)
+  - applies to account, potentially requiring multi-account setup/management
+    or the user accepting a lower level of security on their account
+* use Gmail with OAuth2
+  - requires user to set up a Google Cloud project for API keys
+  - requires more complex codebase
+* use third party provider (e.g. SendGrid, Mailgun)
+  - limits on free emails and/or cost
+
+Looks like you can send 100 emails / day for free with no credit card using Twilio/Sendgrid. Seems simple compared to the burden of setting up a GCP project and/or downgrading Google account security. If you wanted to scale it, you might start using GCP and Gmail, but then you might also be able to more easily justify the cost of using the third party provider with built in analytics.
+
+Set up a Twilio account. It's honestly a bit of a burden as you have to verify phone numbers, create sender IDs etc. Unclear that this is really the silver bullet compared to setting up a Gmail account for example. Twilio does highlight various channels, so could be useful to send SMS or WhatsApp communications using the same platform.
+
+Approach:
+* start with free Twilio account 
+* consider going down the "set up my own SMTP" and/or "use Gmail API with GCP project" route in due course
+
+History
+* create Twilio account, including phone number verification
+* go to SendGrid via Twilio, had to again enter phone number
+* Create a Sender
+  - because Twilio is designed for mass marketing in different regions, you have to have physical company address etc to comply with anti-spam laws
+  - using a personal gmail email address will likely fail due to [DMARC](https://www.twilio.com/docs/sendgrid/ui/sending-email/dmarc) "Gmail, or any other receiving email server, has no way of knowing whether you are using SendGrid to send email for legitimate purposes or spoofing Yahoo's domain"
+  - hence, you need to [authenticate a domain you own](https://www.twilio.com/docs/sendgrid/ui/account-and-settings/how-to-set-up-domain-authentication)
+    - DNS is a naming system for domains on the internet. It resolves domains humans can remember, like sendgrid.com, to IP addresses that belong to specific computers
+    - your domain may have...CNAME records pointing to the cloud service that handles your email
+    - DNS records are managed using your DNS provider or host. Popular DNS providers include...Cloudflare
+
+
+
+| Option | Pros ✅ | Cons ❌ | Considerations 🔹 |
+|--------|--------|--------|------------------|
+| **1. Gmail SMTP (App Passwords)** | - Free and easy to set up  <br> - Works with a separate Gmail account | - Requires enabling App Passwords  <br> - Sending limits (500 emails/day for free Gmail)  <br> - May have deliverability issues | - Use a separate Gmail account, not your main one. <br> - Best for low-volume personal use. |
+| **2. Gmail SMTP (OAuth2)** | - More secure than App Passwords  <br> - No need to store plain-text credentials | - More complex setup (requires Google Cloud project)  <br> - Others cloning your repo must set up OAuth | - Only use if security is a primary concern. <br> - Less convenient for a simple script. |
+| **3. Own Mail Server** | - Full control over sending emails  <br> - No third-party service required | - Requires setting up SPF, DKIM, and DMARC  <br> - Many cloud providers block SMTP port 25  <br> - Complex to maintain | - Only feasible if you own a domain and are comfortable managing email infrastructure. |
+| **4. Transactional Email Service (SendGrid, Mailgun, etc.)** | - High deliverability and reliability  <br> - Free tiers available  <br> - No SMTP port issues | - Requires account verification  <br> - Often requires domain authentication for best results | - Best for sending emails reliably in production. <br> - Needs a domain for optimal setup. |
+| **5. SMTP Relay (e.g., AWS SES, Postmark SMTP)** | - More reliable than personal SMTP  <br> - Easier than running your own mail server | - Requires setting up SMTP credentials  <br> - May require domain verification | - Good middle ground for cloud-based apps. <br> - AWS SES is cheap and scalable. |
+| **6. Pre-Built CLI Tool (mailx, msmtp, etc.)** | - Simple if on Linux  <br> - Uses system mail settings | - Not cross-platform (Windows setup is tricky)  <br> - Requires configuring outgoing mail | - Useful for cloud-hosted Linux setups. <br> - Not ideal for cross-platform scripts. |
+
+My approach will be
+1. Set up Gmail SMTP (App Passwords) as it seems like a relatively simple option that others can test out if they want to
+2. If/When I purchase a domain name for the blog, go down the "Own Mail Server" rabbit hole and provide this as a secondary method for this app to send emails.
+
+Steps
+1. Create a new Gmail account ([instructions](https://support.google.com/mail/answer/56256?hl=en))
+  - note you need to write down the password when you create it as Google/Chrome won't automatically add it to the Google password manager
+2. Enable 2-Step Verification & Generate an App Password
+  - Google Account Security > "Signing in to Google" > enable 2-Step Verification (if not already enabled)
+  - Google Account Security > App Passwords (this option only appears after enabling 2FA) > App: Mail and Device: Other (Custom name) > Enter a name (e.g., "Python Script") and click Generate > Copy the 16-character password (it won’t be shown again)
+  - I can't find this, so I search and find the direct link: [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+  - at this point I get "The setting you are looking for is not available for your account." 
+  - From the Google instructions [here](https://support.google.com/accounts/answer/6103523?sjid=12133855215205350075-NC):
+```
+If you’ve set up 2-Step Verification but can’t find the option to add an app password, it might be because:
+* Your Google Account has 2-Step Verification set up only for security keys.
+* You’re logged into a work, school, or another organization account.
+* Your Google Account has Advanced Protection.
+```
+- I'm not aware that any of the above apply, but it's getting to the point where I think we with Plan B as this isn't the "simple" option I was promised or want for someone having a play with this project.
+
+In case I want to come back to it, here's the step-by-step guide from ChatGPT:
+
+```
+Step 1: Create a Separate Gmail Account (Recommended)
+Since you don’t want to use your main Google account, follow these steps:
+
+Go to Google Account Sign Up.
+
+Create a new Gmail account (e.g., yourapp@gmail.com).
+
+Log into this new Gmail account and enable 2-Step Verification (required for App Passwords).
+
+Step 2: Enable 2-Step Verification & Generate an App Password
+App Passwords allow your script to log in without needing your actual Gmail password.
+
+Log into the new Gmail account.
+
+Go to Google Account Security.
+
+Under "Signing in to Google", enable 2-Step Verification (if not already enabled).
+
+Once 2-Step Verification is enabled, go back to Google Account Security.
+
+Click App Passwords (this option only appears after enabling 2FA).
+
+Select App: Mail and Device: Other (Custom name).
+
+Enter a name (e.g., "Python Script") and click Generate.
+
+Copy the 16-character password (it won’t be shown again).
+
+Step 3: Install Required Python Libraries
+Ensure you have the necessary libraries installed:
+
+sh
+Copy
+Edit
+pip install smtplib email-validator
+smtplib is built into Python, so no need to install it separately. The email-validator package is optional but useful for checking email validity before sending.
+
+Step 4: Write Your Python Script
+Here’s a basic Python script using Gmail’s SMTP:
+
+python
+Copy
+Edit
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+# Gmail SMTP Configuration
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+GMAIL_USERNAME = "yourapp@gmail.com"  # Use the Gmail address you created
+GMAIL_PASSWORD = "your-app-password"  # Use the 16-character App Password
+
+# Email details
+sender_email = GMAIL_USERNAME
+receiver_email = "recipient@example.com"  # Replace with the recipient's email
+subject = "Test Email from Python"
+body = "This is a test email sent from Python using Gmail SMTP."
+
+# Create the email message
+msg = MIMEMultipart()
+msg["From"] = sender_email
+msg["To"] = receiver_email
+msg["Subject"] = subject
+msg.attach(MIMEText(body, "plain"))
+
+# Send email using SMTP
+try:
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        server.starttls()  # Secure the connection
+        server.login(GMAIL_USERNAME, GMAIL_PASSWORD)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
+        print("Email sent successfully!")
+except Exception as e:
+    print(f"Error: {e}")
+Step 5: Test the Script
+Run the script in your Python environment (python send_email.py).
+
+Check the recipient’s inbox (and spam folder, just in case).
+
+Step 6: (Optional) Improve Security
+Do NOT hardcode credentials: Store them in environment variables instead.
+
+Use a .env file: Install python-dotenv (pip install python-dotenv) and store credentials securely.
+
+Example .env file:
+
+ini
+Copy
+Edit
+EMAIL_USER=yourapp@gmail.com
+EMAIL_PASS=your-app-password
+Modify the script to use these values:
+
+python
+Copy
+Edit
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+GMAIL_USERNAME = os.getenv("EMAIL_USER")
+GMAIL_PASSWORD = os.getenv("EMAIL_PASS")
+```
+
+Plan B: Oauth2 rabbit hole
+
+Step 1: Create a Google Cloud Project
+  - Go to [Google Cloud Console](https://console.cloud.google.com)
+  - (optional) Swap to the new Gmail account you created (top right)
+  - Select a project (top left; will be set to the last active project or "Select a project" if you don't have any existing ones) > "New Project" > add a name (e.g. "Gmail SMTP OAuth2") > Create > (wait a moment) Select project
+    - Can use a generic name and reuse this project across multiple apps that require access to the same gmail, or name it specific to the app (more secure but more effort); recommendation is to make a generic until such time as you need it to be specific (due to scale, multiple users etc)
+    - optionally rename the project ID to make it easier to type/remember/read (e.g. gmail-smtp-oauth2-465784 -> alexgouldblog-gmail-smtp)
+
+Step 2: Enable the Gmail API
+  - (within project) APIs & Services > Library > Gmail API (under "Google Workspace or use search box) > Enable
+
+Step 3: Create OAuth 2.0 Credentials
+  - APIs & Services > Credentials
+  - (if prompted) Configure Consent Screen > Get started
+    - App Information: Fill in app name (e.g. Alex Gould's blog) and user support email (your new Gmail address) > Next
+    - Audience: External
+    - Contact Information: your new Gmail address
+    - Finish: (optional) take a look at the [Google API Services: User Data Policy](https://developers.google.com/terms/api-services-user-data-policy) (e.g. must have privacy/data policy for public apps, can't use Google Sign-In for Child/Mixed audience apps)
+ - Create OAuth client > Application Type: "Desktop App" > Name (e.g. happy-plants) > Create > Download JSON (save as credentials.json in project folder)
+    - added credentials.json to .gitignore
+
+Step 4: Install Required Python Libraries
+  - `pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib`
+    - renamed my src/email.py as this apparently conflicts with Python's built-in email module
+    - added these to requirements.txt
+
+Aside - read [the docs](https://developers.google.com/workspace/gmail/api/guides) at least briefly, as the specific code used changes over time, so ChatGPT may suggest weird things (e.g. it told me to pip install google-auth-oauth2l which isn't actually a package). Googling "python google gmail api" gets me to the [correct page](https://developers.google.com/workspace/gmail/api/quickstart/python) quickly.
+
+```python
+import os.path
+
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+# If modifying these scopes, delete the file token.json.
+SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+
+
+def main():
+  """Shows basic usage of the Gmail API.
+  Lists the user's Gmail labels.
+  """
+  creds = None
+  # The file token.json stores the user's access and refresh tokens, and is
+  # created automatically when the authorization flow completes for the first
+  # time.
+  if os.path.exists("token.json"):
+    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+  # If there are no (valid) credentials available, let the user log in.
+  if not creds or not creds.valid:
+    if creds and creds.expired and creds.refresh_token:
+      creds.refresh(Request())
+    else:
+      flow = InstalledAppFlow.from_client_secrets_file(
+          "credentials.json", SCOPES
+      )
+      creds = flow.run_local_server(port=0)
+    # Save the credentials for the next run
+    with open("token.json", "w") as token:
+      token.write(creds.to_json())
+
+  try:
+    # Call the Gmail API
+    service = build("gmail", "v1", credentials=creds)
+    results = service.users().labels().list(userId="me").execute()
+    labels = results.get("labels", [])
+
+    if not labels:
+      print("No labels found.")
+      return
+    print("Labels:")
+    for label in labels:
+      print(label["name"])
+
+  except HttpError as error:
+    # TODO(developer) - Handle errors from gmail API.
+    print(f"An error occurred: {error}")
+
+
+if __name__ == "__main__":
+  main()
+```
+
+
+
+
+
+```ChatGPT
+Step 5: Authenticate and Get an OAuth2 Token
+  - create a Python script to authenticate and obtain an access token.
+
+import os
+import pickle
+import base64
+import google.auth
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+# OAuth2 Scopes for sending email via Gmail SMTP
+SCOPES = ["https://mail.google.com/"]
+
+def get_oauth2_credentials():
+    creds = None
+    token_file = "token.pickle"
+
+    # Load existing token if available
+    if os.path.exists(token_file):
+        with open(token_file, "rb") as token:
+            creds = pickle.load(token)
+
+    # If credentials are not valid, obtain new ones
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())  # Refresh token if expired
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                "credentials.json", SCOPES
+            )
+            creds = flow.run_local_server(port=0)  # Open browser for login
+
+        # Save credentials for future use
+        with open(token_file, "wb") as token:
+            pickle.dump(creds, token)
+
+    return creds
+
+# Run the authentication process
+creds = get_oauth2_credentials()
+print("OAuth2 authentication successful!")
+What This Script Does
+Loads the credentials.json file (downloaded from Step 3).
+
+Opens a browser for Google sign-in (first-time setup).
+
+Requests Gmail API access and saves the token (token.pickle).
+
+Refreshes the token automatically when needed.
+
+Step 6: Send Email Using OAuth2 and Gmail SMTP
+Now, modify your email-sending script to use OAuth2 authentication.
+
+python
+Copy
+Edit
+import smtplib
+import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+
+# Load OAuth2 credentials
+def load_credentials():
+    creds = Credentials.from_authorized_user_file("token.pickle")
+    creds.refresh(Request())  # Refresh token if needed
+    return creds.token
+
+# Gmail SMTP Configuration
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+GMAIL_USERNAME = "yourapp@gmail.com"  # Use your Gmail address
+
+# Generate OAuth2 authentication string
+def generate_oauth2_string(username, access_token):
+    auth_string = f"user={username}\x01auth=Bearer {access_token}\x01\x01"
+    return base64.b64encode(auth_string.encode()).decode()
+
+# Send email
+def send_email():
+    access_token = load_credentials()
+    auth_string = generate_oauth2_string(GMAIL_USERNAME, access_token)
+
+    sender_email = GMAIL_USERNAME
+    receiver_email = "recipient@example.com"  # Replace with the recipient's email
+    subject = "Test Email with OAuth2"
+    body = "This email was sent using Gmail SMTP with OAuth2 authentication."
+
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.docmd("AUTH", "XOAUTH2 " + auth_string)  # OAuth2 authentication
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+            print("Email sent successfully!")
+    except Exception as e:
+        print(f"Error: {e}")
+
+send_email()
+Step 7: Run and Test Your Script
+Run the authentication script once:
+
+sh
+Copy
+Edit
+python authenticate.py
+This will open a browser to sign in with your Gmail account.
+
+Google will ask for permission to send emails on your behalf.
+
+After granting access, the script will save your OAuth2 token in token.pickle.
+
+Run the email-sending script:
+
+sh
+Copy
+Edit
+python send_email.py
+This will use the OAuth2 token to send an email via Gmail’s SMTP server.
+
+Step 8: (Optional) Set Up Token Auto-Renewal
+The access token expires every 1 hour, but the refresh token allows it to be renewed automatically. The scripts above already handle token renewal, so you don’t need to manually log in again.
+```
+
 
 
 ## Repo Structure
