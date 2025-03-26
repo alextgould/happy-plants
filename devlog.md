@@ -15,10 +15,60 @@ A place to park ideas for future work, to allow me to better focus on the task a
   - revisit the add_src_to_path.py issue, with src not being treated as a module even if __init__.py is included in it
   - consider whether to adjust code to allow for intra-day data collection in the database (with optional parameter driving this) e.g. for collecting data every 1 hour for a week in order to understand a) how often they update forecasts (both time of day and frequency within the day and whether it's regular (automated) or not (manual) b) how "rest of day" forecasts change in response to actual weather events on the forecast day (i.e. if it rains half way through the day and then clears up, will the forecast amount reduce to zero as it's already rained or will the forecast amount approach the actual amount as the day progresses)
   - consider whether to share the data folder; not usually done but in this case it takes time to build up a history of forecast data and someone wanting to play with the system might not want to sit on it for 3 months locally. might be worth having a separate location with a copy of the data used for training the models that can also be used if someone wants to play around more generally
+  - future stage: create an API that tells the program that the user has watered their plants and include this in the email that gets sent, so they click a button to update the system
+  - adjust charts to have historical chart include the benchmark amount, place benchmark amount in a config file somewhere so it's not spread across multiple files, if adding benchmark to historical chart doesn't already do it set it up to have y axis minimum of benchmark amount but expand if actual data exceeds this
   
 # Historical notes
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
+
+## Adding source to path
+
+I had add_src_to_path.py in my scripts folder and removed it to make things more tidy. I'm putting the code here as a reminder to consider discussing this in blog post
+
+```python
+# This file dynamically adds the 'src' folder to sys.path at runtime, so import database will work given src/database.py
+# You then add "import add_src_to_path" to the top of another .py file in the scripts folder to enable this functionality
+
+# Alternative approach is to use .vscode/settings.json with the following
+# Pros: linting will work properly, simpler code with one less import file
+# Cons: assumes user is using vscode, otherwise things might not work
+# Going with the .vscode approach for now, but will revisit this if/when we start deploying it to a server
+'''
+{
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/src"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src"
+    ]
+}
+'''
+import logging
+logger = logging.getLogger(__name__)
+
+import sys
+import os
+
+# Dynamically add 'src' to sys.path at runtime
+logging.debug(f'current working directory is {os.getcwd()}')
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+logging.debug(f'project_root is {project_root}')
+src_path = os.path.join(project_root, 'src')
+logging.debug(f'src_path is {src_path}')
+if src_path not in sys.path:
+    sys.path.append(src_path)
+    logging.debug(f'added src_path to sys.path')
+```
 
 ## Notes for blog
 

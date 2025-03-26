@@ -1,10 +1,5 @@
 data
 __pycache__
 
-# Google Gmail API credentials
-credentials.json
-token.json
-
-# Placeholder - may not actually need this
-.env
-.env.example
+# .config folder contains Google Gmail API credentials (credentials.json, token.json) along with .env files
+.config/

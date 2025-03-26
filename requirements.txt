@@ -1,12 +1,24 @@
+# see also requirements-freeze.txt which was created using
+# pip list --not-required --format=freeze | findstr /V "^pip" > requirements-freeze.txt
+# (in case there is a conflict with the latest versions of these packages and the codebase)
+
+# jupyter notebooks - for prototyping code
 notebook
 
+# beautiful soup - for scraping rainfall data
 requests
 beautifulsoup4
 
+# pandas - for manipulating data
 pandas
 
+# dotenv - for storing secrets as environment variables in local environment
 dotenv
 
+# google gmail api
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
+
+# matplotlib - for simple plots to include in emails
+matplotlib

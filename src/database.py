@@ -1,6 +1,14 @@
 """
 This script defines a RainfallDatabase class that can create or reset the database tables, add data to the database,
 and extract data from the database, handling formatting (mainly dates) and input/output data types (mainly python dataframes).
+
+Example usage:
+
+    db = database.RainfallDatabase()
+    df_tables = db.check_tables()
+    df_forecast = db.get_forecast_data()
+    df_historical = db.get_historical_data()
+    df_preds = db.get_preds_data()
 """
 
 import os
@@ -121,8 +129,20 @@ class RainfallDatabase:
                       row['rain_chance'], row['rain_mm_low'], row['rain_mm_high']))
             conn.commit()
 
-    def get_forecast_data(self, filter=""):
-        """Retrieve forecast data with an optional filter."""
+    def get_forecast_data(self, filter: str = "") -> pd.DataFrame:
+        """
+        Retrieve forecast data from the database with an optional filter.
+
+        Args:
+            filter (str, optional): An SQL WHERE condition to filter the results.
+                Example: filter="date_forecast_applies_to='2025-03-25'". If no filter
+                is provided, all forecast data is returned.
+
+        Returns:
+            pandas.DataFrame: A DataFrame containing the forecast data, with the
+            'date_forecast_was_made' and 'date_forecast_applies_to' columns
+            converted to datetime format.
+        """
         with self._connect() as conn:
             query = "SELECT * FROM forecast"
             if filter:
@@ -145,8 +165,19 @@ class RainfallDatabase:
                 """, (row['date'].strftime('%Y-%m-%d'), str(row['rainfall_mm'])))
             conn.commit()
 
-    def get_historical_data(self, filter=""):
-        """Retrieve historical data with an optional filter."""
+    def get_historical_data(self, filter: str = "") -> pd.DataFrame:
+        """
+        Retrieve historical data from the database with an optional filter.
+
+        Args:
+            filter (str, optional): An SQL WHERE condition to filter the results.
+                Example: filter="date_forecast_was_made='2025-03-25'". If no filter
+                is provided, all historical data is returned.
+
+        Returns:
+            pandas.DataFrame: A DataFrame containing the historical data, with the
+            'date' column converted to datetime format.
+        """
         with self._connect() as conn:
             query = "SELECT * FROM historical"
             if filter:
@@ -167,8 +198,19 @@ class RainfallDatabase:
                 """, (model, date, pred))
             conn.commit()
 
-    def get_preds_data(self, filter=""):
-        """Retrieve preds data with an optional filter."""
+    def get_preds_data(self, filter: str = "") -> pd.DataFrame:
+        """
+        Retrieve predictions data from the database with an optional filter.
+
+        Args:
+            filter (str, optional): An SQL WHERE condition to filter the results.
+                Example: filter="date='2025-03-25'". If no filter is provided,
+                all predictions data is returned.
+
+        Returns:
+            pandas.DataFrame: A DataFrame containing the predictions data, with the
+            'date' column converted to datetime format.
+        """
         with self._connect() as conn:
             query = "SELECT * FROM preds"
             if filter:
