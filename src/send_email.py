@@ -54,8 +54,8 @@ import base64  # Encode authentication strings
 from google.auth.transport.requests import Request  # Refresh OAuth2 tokens
 from google.oauth2.credentials import Credentials  # Handle OAuth2 credentials
 from google_auth_oauthlib.flow import InstalledAppFlow  # OAuth2 authentication flow
-from email.mime.text import MIMEText  # Create email body
 from email.mime.multipart import MIMEMultipart  # Create multipart email
+from email.mime.text import MIMEText  # Create email body
 from email.mime.image import MIMEImage # Image attachments
 from email.mime.application import MIMEApplication # General attachments
 import smtplib  # Send email via SMTP
@@ -98,29 +98,79 @@ def send_email(sender_email: str = "alexgouldblog@gmail.com",
                subject: str = "Test email",
                body: str = "This is a test email",
                attach_path: str = None) -> None:
-    """Send an email using Gmail SMTP with OAuth2 authentication."""
+    """Send an email using Gmail SMTP with OAuth2 authentication.
+
+    Args:
+        sender_email (str): The sender's email address. Defaults to "alexgouldblog@gmail.com".
+        receiver_email (str): The recipient's email address. Defaults to "alextgould@gmail.com".
+        subject (str): The email subject. Defaults to "Test email".
+        body (str): The email body text. Supports HTML formatting. Defaults to "This is a test email".
+        attach_path (str, optional): Path to a file to attach. 
+            - If it's an image (.png, .jpg), it can be embedded inline by including `<img>` in the body text.
+            - If `<img>` is not present, the image will be attached as a normal file.
+            - Other file types will be attached as normal.
+
+    Raises:
+        Exception: Logs an error if the email fails to send.
+    """
 
     creds = _get_credentials()
-    
-    # Generate OAuth2 authentication string
     auth_string = base64.b64encode(f"user={sender_email}\x01auth=Bearer {creds.token}\x01\x01".encode()).decode()
-    
-    # Create email message
-    msg = MIMEMultipart()
+
+    # Create email message (allows inline images)
+    msg = MIMEMultipart("related")
     msg["From"] = sender_email
     msg["To"] = receiver_email
     msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
 
+    # Check if the body includes <img> (inline image placeholder)
+    has_inline_image = "<img>" in body
+
+    # Prepare HTML version of body
+    html_body = body.replace("\n", "<br>")  # Convert newlines to <br> for HTML formatting
+    if has_inline_image:
+        html_body = html_body.replace("<img>", '<img src="cid:inline_image" style="max-width:600px; height:auto;">')
+
+    html_body = f"""
+    <html>
+        <body>
+            <p>{html_body}</p>
+        </body>
+    </html>
+    """
+
+    # Remove <img> tag from plain text version
+    plain_text_body = body.replace("<img>", "")
+
+    # Attach both plain-text and HTML versions
+    msg_alt = MIMEMultipart("alternative")
+    msg_alt.attach(MIMEText(plain_text_body, "plain"))
+    msg_alt.attach(MIMEText(html_body, "html"))
+    msg.attach(msg_alt)
+
+    # Attach file if provided
     if attach_path:
-        with open(attach_path, 'rb') as file:
-            if attach_path.endswith('.png') or attach_path.endswith('.jpg') or attach_path.endswith('.jpeg'):
-                mimefile = MIMEImage(file.read(), name=attach_path)
+        with open(attach_path, "rb") as file:
+            file_data = file.read()
+
+        if attach_path.endswith(('.png', '.jpg', '.jpeg')):
+            if has_inline_image:
+                # Attach inline image
+                mimefile = MIMEImage(file_data, name="inline_image")
+                mimefile.add_header("Content-ID", "<inline_image>")
+                mimefile.add_header("Content-Disposition", "inline", filename="inline_image")
+                msg.attach(mimefile)
             else:
-                mimefile = MIMEApplication(file.read())
-                mimefile.add_header('Content-Disposition', 'attachment', filename=attach_path)
+                # Attach as normal image
+                mimefile = MIMEImage(file_data, name=attach_path)
+                msg.attach(mimefile)
+        else:
+            # Attach as normal file
+            mimefile = MIMEApplication(file_data)
+            mimefile.add_header('Content-Disposition', 'attachment', filename=attach_path)
             msg.attach(mimefile)
-            
+
+    # Send email
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.ehlo()
@@ -141,10 +191,11 @@ if __name__ == "__main__":
         send_email()
 
     # test sending an email with an image attached
-    if True:
-        logging.getLogger('matplotlib').setLevel(logging.WARNING)
-        logging.getLogger('PIL').setLevel(logging.WARNING)
-        import create_plots
+    if False:
         image_path = os.path.join(PROJECT_ROOT, 'img', "forecast.png")
-        create_plots.plot_forecast(image_path=image_path)
         send_email(subject="Test attaching an image", body="Here is today's rainfall forecast (see image attached)", attach_path=image_path)
+
+    # test sending an email with an inline image
+    if True:
+        image_path = os.path.join(PROJECT_ROOT, 'img', "forecast.png")
+        send_email(subject="Test placing an image inline", body="Here is today's rainfall forecast\n\n<img>\n\nAlso here is some more text after the image.", attach_path=image_path)

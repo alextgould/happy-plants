@@ -102,11 +102,11 @@ if __name__ == "__main__":
     image_path = create_plots.plot_forecast(file_name="forecast.png")
 
     # create email body, including predictions from models
-    body = "Here is today's rainfall forecast (see image attached)"
+    body = "Here is the historical and forecast rainfall data for today:\n\n<img>"
     for model_pred in preds:
         model, pred = model_pred
         pred_text = "1 (manually water today)" if pred == 1 else "0 (don't manually water today)"
-        body += f"\n\nModel {model} predicted {pred_text}."
+        body += f"\n\nBased on the data, {model} predicted {pred_text}."
 
     # send email
     send_email.send_email(subject="Daily rainfall data and watering advice", body=body, attach_path=image_path)
