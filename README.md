@@ -3,51 +3,52 @@
 
 ![](img/robots.png)
 
-This project is currently under development
+## What is the purpose of this project?
 
-## Project aim
+The goal of this project is to build a system that will notify me when it's a good time to manually water my plants (and gain/demonstrate some related skills along the way).
 
-The goal of this project is to build a system that will notify me when it's a good time to manually water my plants.
+Currently, the following is in place:
 
-In order to this, we will:
-
-* use APIs and web scraping tools to gather historical and forecast rainfall data for my local area (Sydney)
+* use web scraping tools to gather historical and forecast rainfall data for my local area (Sydney)
 
 * save the data into an sqlite database
 
-* train a reinforcement learning model to predict when is the best time to manually water the plants
+* transform the data and give it to model(s) to predict when is the best time to manually water the plants
 
-* use automation tools to ensure the data is gathered automatically on a daily basis and the model constantly improved as more data is obtained
+* use automation tools to ensure the process is run automatically on a daily basis
 
-We may also
+* send emails to provide visualisations and watering recommendations
 
-* bootstrap the process with some synthetic data (noting that there isn't a history of forecasts, only of actual rainfall)
+This project is still under development. Future improvements may include:
 
-* host the system on AWS or GCP
+* Deploy the system to a cloud platform (GCP and/or AWS), using a Linux environment with automation using cron/systemd. This could also involve using Terraform to create a reproducable infrastructure model that others can use to deploy the system.
 
-* use terraform to create a reproducable infrastructure model that others can use to deploy the system
+* Explore alternative models for making the watering recommendation, such as reinforcement learning and/or machine learning models. This could also involve creating synthetic data to train the models on (noting that there isn't a history of forecasts, only of actual rainfall).
+
+* Create an API to register when the user waters their plants, which can be accessed by clicking a button in the daily email. This way the system doesn't have to assume that the user has watered their plants, and the user can ignore the recommendation and get a reminder the next day.
 
 ## Repo structure
 
-Draft structure of the repo below (subject to change e.g. may not do automation using Python). Note not all of the files have been developed yet. Notebooks are a useful way of developing the code and will be referenced in a blog post, but aren't used directly in the end product.
+The main folders and files in this repo are as follows:
 
 ```bash
 happy-plants/
-│── data/                  # while storing data locally (not committed)
+│── .config/               # used for credentials (not committed)
+│── data/                  # contains the sqlite database (not committed)
 │── notebooks/             # Jupyter notebooks for prototyping
+│── img                    # Images used in this readme and when sending emails
+│── scripts/               # Scripts that call modules from src folder
+│   │── daily_run.py       # Runs daily pipeline
+│   │── reset_database.py  # Clears all the data from the database
 │── src/                   # Main Python code
-│   │── __init__.py        # Marks src as a package
-│   │── data_ingestion.py  # Scraping/APIs for rainfall data
-│   │── database.py        # Handles SQLite interactions
-│   │── rl_model.py        # Defines & trains the RL model
-│   │── automation.py      # Scheduling & automation logic
-│── scripts/               # Executable scripts for automation
-│   │── collect_data.py    # Runs data collection pipeline
-│   │── train_model.py     # Trains the model
-│   │── notify.py          # Sends watering notifications
-│── terraform/             # Infrastructure-as-code for cloud deployment
+│   │── create_plots.py    # Create images from data in database for emails
+│   │── database.py        # Handles SQLite database interactions
+│   │── get_data.py        # Source data from websites
+│   │── pred_models.py     # Models that predict whether we should manually water or not
+│   │── prepare_data.py    # Data manipulation for predictive models
+│   │── send_email.py      # Send emails using Google's Gmail API
 │── requirements.txt       # Python dependencies
-│── .env                   # Environment variables (gitignored)
+│── devlog.md              # Development documentation
 │── README.md              # Project documentation
 │── .gitignore             # Ignore unnecessary files
 ```
