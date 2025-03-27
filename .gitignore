@@ -3,3 +3,7 @@ __pycache__
 
 # .config folder contains Google Gmail API credentials (credentials.json, token.json) along with .env files
 .config/
+
+# daily outputs will change regularly but no need to keep updating the version on github
+scripts/daily_run.log
+img/forecast.png

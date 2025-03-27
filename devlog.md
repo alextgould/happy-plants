@@ -22,6 +22,10 @@ A place to park ideas for future work, to allow me to better focus on the task a
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
 
+## Minimum rainfall is actually used
+
+As at 9:30AM on Fri 28/3/25, the forecast for today is 1-10 mm and tomorrow is 20-70mm, so the min mm, while almost always 0mm, does actually take values >0mm from time to time. Luckily the data is being saved to the database, so I can always decide to add it into prepare_data.py and/or create_plots.py at some point in the future.
+
 ## Adding source to path
 
 I had add_src_to_path.py in my scripts folder and removed it to make things more tidy. I'm putting the code here as a reminder to consider discussing this in blog post
