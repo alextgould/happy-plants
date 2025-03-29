@@ -22,6 +22,27 @@ A place to park ideas for future work, to allow me to better focus on the task a
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
 
+## Late night check
+
+On 29/3/25 it rained a lot. I tried to run the daily_run.py at 11:30pm having run it earlier in the day. I actually got an error which I don't have time to look into right now (I need to go to sleep) but traceback is below:
+
+Traceback (most recent call last):
+  File "d:\Projects\happy-plants\scripts\daily_run.py", line 95, in <module>
+    get_data()
+  File "d:\Projects\happy-plants\scripts\daily_run.py", line 42, in get_data
+    df_historical = historical_data()
+  File "D:\Projects\happy-plants\src\get_data.py", line 157, in historical_data
+    df = _extract_historical_data(soup=soup)
+  File "D:\Projects\happy-plants\src\get_data.py", line 141, in _extract_historical_data
+    date = datetime(int(year), month_number + 1, day_number).strftime('%Y-%m-%d') # add year and format as yyyymmdd
+ValueError: day is out of range for month
+
+I think what's happened here is that today is the 29th of March and there was no 29th of February. My code assumes the values are all populated. This will need a fix, as it will happen again tomorrow.
+
+Fixed with a try.. except.. and confirmed that the error was that it was trying to populate 29/2. There may be a better way, but I need to sleep.
+
+Interestingly, on the Forecast data page, the forecast was issued at 4:20pm and simply has 80% chance of any rain with no possible rainfall range.
+
 ## Minimum rainfall is actually used
 
 As at 9:30AM on Fri 28/3/25, the forecast for today is 1-10 mm and tomorrow is 20-70mm, so the min mm, while almost always 0mm, does actually take values >0mm from time to time. Luckily the data is being saved to the database, so I can always decide to add it into prepare_data.py and/or create_plots.py at some point in the future.

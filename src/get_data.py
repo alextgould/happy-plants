@@ -3,6 +3,10 @@ This script uses BeautifulSoup to scrape the public historical and forecast rain
 saving it into a pandas dataframe with formatted dates.
 """
 
+# Logging setup
+import logging
+logger = logging.getLogger(__name__)
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -138,8 +142,11 @@ def _extract_historical_data(soup):
     for i, (day, *values) in enumerate(data):
         day_number = int(day[:-2]) # remove 'st', 'nd' etc
         for month_number, value in enumerate(values):
-            date = datetime(int(year), month_number + 1, day_number).strftime('%Y-%m-%d') # add year and format as yyyymmdd
-            daily_data.append([date, value])
+            try:
+                date = datetime(int(year), month_number + 1, day_number).strftime('%Y-%m-%d') # add year and format as yyyymmdd
+                daily_data.append([date, value])
+            except: # quick fix for date out of range (e.g. trying to populate 29/2 once 29/3 exists)
+                logger.debug(f"Unable to process date {int(year)}-{month_number + 1}-{day_number}")
 
     # convert data to dataframe for ease of filtering etc
     df = pd.DataFrame(daily_data, columns=['date', 'rainfall_mm'])
@@ -156,3 +163,12 @@ def historical_data(base_url = "http://www.bom.gov.au/jsp/ncc/cdio/weatherData/a
     soup = BeautifulSoup(src, 'html.parser') # recommended to include html.parser here to ensure consistent cross-platform results
     df = _extract_historical_data(soup=soup)
     return df
+
+if __name__ == "__main__":
+    
+    # Logging setup
+    import logging
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    
+    df_historical = historical_data()
+    logger.debug(f"df_historical {df_historical}")

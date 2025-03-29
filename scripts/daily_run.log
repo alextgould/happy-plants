@@ -320,3 +320,54 @@
 2025-03-28 09:38:03 INFO: Added logic model prediction of 1 for 2025-03-28 to the database.
 2025-03-28 09:38:04 INFO: Forecast plot saved as D:\Projects\happy-plants\img\forecast.png
 2025-03-28 09:38:11 INFO: Email sent successfully!
+2025-03-29 07:30:05 INFO: New forecast data:   date_forecast_was_made date_forecast_applies_to  rain_chance  rain_mm_low  rain_mm_high
+0             2025-03-29               2025-03-29         0.95           30            90
+1             2025-03-29               2025-03-30         0.80            0             7
+2             2025-03-29               2025-03-31         0.60            0             3
+3             2025-03-29               2025-04-01         0.40            0             1
+4             2025-03-29               2025-04-02         0.30            0             1
+5             2025-03-29               2025-04-03         0.20            0             0
+6             2025-03-29               2025-04-04         0.30            0             1
+2025-03-29 07:30:05 INFO: New historical data:          date rainfall_mm
+0  2025-01-01           0
+3  2025-01-02           0
+6  2025-01-03         4.8
+9  2025-01-04         0.2
+12 2025-01-05           0
+..        ...         ...
+71 2025-03-24         2.0
+74 2025-03-25           0
+77 2025-03-26         1.8
+80 2025-03-27           0
+83 2025-03-28         8.0
+
+[87 rows x 2 columns]
+2025-03-29 07:30:05 INFO: Added logic model prediction of 0 for 2025-03-29 to the database.
+2025-03-29 07:30:06 INFO: Forecast plot saved as D:\Projects\happy-plants\img\forecast.png
+2025-03-29 07:30:12 INFO: Email sent successfully!
+2025-03-29 23:37:14 INFO: New forecast data:   date_forecast_was_made date_forecast_applies_to  rain_chance  rain_mm_low  rain_mm_high
+0             2025-03-29               2025-03-29          0.8            0             0
+1             2025-03-29               2025-03-30          0.9            1            10
+2             2025-03-29               2025-03-31          0.7            0             6
+3             2025-03-29               2025-04-01          0.4            0             1
+4             2025-03-29               2025-04-02          0.4            0             1
+5             2025-03-29               2025-04-03          0.4            0             1
+6             2025-03-29               2025-04-04          0.3            0             1
+7             2025-03-29               2025-04-05          0.2            0             0
+2025-03-29 23:37:14 INFO: New historical data:          date rainfall_mm
+0  2025-01-01           0
+3  2025-01-02           0
+6  2025-01-03         4.8
+9  2025-01-04         0.2
+12 2025-01-05           0
+..        ...         ...
+71 2025-03-24         2.0
+74 2025-03-25           0
+77 2025-03-26         1.8
+80 2025-03-27           0
+83 2025-03-28         8.0
+
+[87 rows x 2 columns]
+2025-03-29 23:37:14 INFO: Added logic model prediction of 0 for 2025-03-29 to the database.
+2025-03-29 23:37:16 INFO: Forecast plot saved as D:\Projects\happy-plants\img\forecast.png
+2025-03-29 23:37:22 INFO: Email sent successfully!
