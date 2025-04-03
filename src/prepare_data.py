@@ -175,8 +175,8 @@ if __name__ == "__main__":
 
     # test single line of predictor data
     if True:
-        X_train = predictor_data_row(forecast_date='2025-03-10')
-        y_train = create_y_train(X_train)
+        X_train = predictor_data_row(forecast_date='2025-04-03', forecast_model='logic')
+        #y_train = create_y_train(X_train)
 
     # test multiple lines of predictor data and corresponding targets
     #forecast_model = "test model 1"

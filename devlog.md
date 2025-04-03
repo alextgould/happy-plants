@@ -5,6 +5,8 @@ This file is for keeping assorted notes along the way, which may be useful in la
 
 # To Do
 
+## Outstanding items
+
 A place to park ideas for future work, to allow me to better focus on the task at hand
 
   - mlflow - for tracking model performance over time
@@ -15,12 +17,31 @@ A place to park ideas for future work, to allow me to better focus on the task a
   - revisit the add_src_to_path.py issue, with src not being treated as a module even if __init__.py is included in it
   - consider whether to adjust code to allow for intra-day data collection in the database (with optional parameter driving this) e.g. for collecting data every 1 hour for a week in order to understand a) how often they update forecasts (both time of day and frequency within the day and whether it's regular (automated) or not (manual) b) how "rest of day" forecasts change in response to actual weather events on the forecast day (i.e. if it rains half way through the day and then clears up, will the forecast amount reduce to zero as it's already rained or will the forecast amount approach the actual amount as the day progresses)
   - consider whether to share the data folder; not usually done but in this case it takes time to build up a history of forecast data and someone wanting to play with the system might not want to sit on it for 3 months locally. might be worth having a separate location with a copy of the data used for training the models that can also be used if someone wants to play around more generally
-  - future stage: create an API that tells the program that the user has watered their plants and include this in the email that gets sent, so they click a button to update the system
-  - adjust charts to have historical chart include the benchmark amount, place benchmark amount in a config file somewhere so it's not spread across multiple files, if adding benchmark to historical chart doesn't already do it set it up to have y axis minimum of benchmark amount but expand if actual data exceeds this
-  
+  - place benchmark amount in a config file somewhere so it's not spread across multiple files
+  - adjust email to include a link to the two data sources
+  - adjust viz to include min/max rain chance? 
+
+## Completed items
+
+  - check that having recommended we water on 1/4 it doesn't also recommend it on 2/4 as I suspect this aspect may have broken along the way  DONE 3/4/25
+  - adjust email subject to include the day of the week and/or differ based on model prediction (e.g. "You should water your plants today" vs "Daily rainfall update")?  DONE 3/4/25
+  - update Readme with details of how to replicate the process (particularly the need for a GCP project to send emails) DONE 3/4/25
+
 # Historical notes
 
 These are broadly in reverse chronological order (i.e. oldest stuff is at the bottom)
+
+## Fixed auth flow
+
+Seems we don't have indefinite refreshes and it may be 50 per user per app. This puts a spanner in the works of the server approach. Adjusted code for now to reauth as required, but only really works locally. Will have to revisit the email issue when we go to server, likely using own domain etc.
+
+## Historical data definition
+
+I probably should have paid more attention to the fine print when looking at the data page:
+
+> Observations of Daily rainfall are nominally made at 9 am local clock time and record the total for the previous 24 hours.
+
+This probably means running the process at 7:30am is missing out on useful information. However, I also like to water my plants well before 10am when evaporation and burning become factors. It's unclear how long they might take to update the site after the 9am measurement. Probably fine to leave as-is for now.
 
 ## Late night check
 

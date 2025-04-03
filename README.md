@@ -1,31 +1,47 @@
-
 # Happy Plants: A data-driven predictive watering notification system
 
 ![](img/robots.png)
 
-## What is the purpose of this project?
+## About this project
 
-The goal of this project is to build a system that will notify me when it's a good time to manually water my plants (and gain/demonstrate some related skills along the way).
+The goal of the project was to build a system that would notify me when it's a good time to manually water my plants, and gain/demonstrate some skills along the way. This includes:
+* Python as the core programming language, with Jupyter notebooks used for prototyping
+* Scraping data from the web using the BeautifulSoup and requests libraries
+* Manipulating data using the Pandas library and storing the data in an Sqlite database
+* Sending emails using the Google Gmail API, including generating and including inline data visualisations
+* Daily automation using Windows Task Scheduler
 
-Currently, the following is in place:
+You can read all about this project in its associated [blog post](https://alextgould.github.io/happy-plants/).
 
-* use web scraping tools to gather historical and forecast rainfall data for my local area (Sydney)
+## Usage
 
-* save the data into an sqlite database
+If you want to try running the program yourself locally:
 
-* transform the data and give it to model(s) to predict when is the best time to manually water the plants
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/alextgould/happy-plants.git
+   ```
 
-* use automation tools to ensure the process is run automatically on a daily basis
+2. (Optional) Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   ```
 
-* send emails to provide visualisations and watering recommendations
+3. Install the required dependencies (use requirements.txt if you want to use the latest versions or requirements-freeze.txt if you want to guarantee no dependency conflicts):
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-This project is still under development. Future improvements may include:
+4. To send emails, you'll need to create a Google Cloud Platform (GCP) project and configure the Gmail API. Instructions for doing this are available in the [blog post](https://alextgould.github.io/happy-plants/) and in the docstring at the top of the `src/send_email.py` file.
 
-* Deploy the system to a cloud platform (GCP and/or AWS), using a Linux environment with automation using cron/systemd. This could also involve using Terraform to create a reproducable infrastructure model that others can use to deploy the system.
+5. The main entry point for the program is `scripts/daily_run.py`. You can run it manually:
+   ```bash
+   python scripts/daily_run.py
+   ```
 
-* Explore alternative models for making the watering recommendation, such as reinforcement learning and/or machine learning models. This could also involve creating synthetic data to train the models on (noting that there isn't a history of forecasts, only of actual rainfall).
+6. To automate daily execution, you can set up `scripts/daily_run.py` using Windows Task Scheduler. Detailed instructions are available in the [blog post](https://alextgould.github.io/happy-plants/).
 
-* Create an API to register when the user waters their plants, which can be accessed by clicking a button in the daily email. This way the system doesn't have to assume that the user has watered their plants, and the user can ignore the recommendation and get a reminder the next day.
+I'm not currently sharing the /data folder, but given it takes some time to build up a history of forecasts for modelling purposes, reach out if you would like a copy of this.
 
 ## Repo structure
 
@@ -36,7 +52,7 @@ happy-plants/
 │── .config/               # used for credentials (not committed)
 │── data/                  # contains the sqlite database (not committed)
 │── notebooks/             # Jupyter notebooks for prototyping
-│── img                    # Images used in this readme and when sending emails
+│── img/                   # Images used in this readme and when sending emails
 │── scripts/               # Scripts that call modules from src folder
 │   │── daily_run.py       # Runs daily pipeline
 │   │── reset_database.py  # Clears all the data from the database

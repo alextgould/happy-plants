@@ -62,7 +62,7 @@ def daily_pred(models=MODELS):
     """
 
     current_date = datetime.today().date().strftime('%Y-%m-%d')
-    X = prepare_data.predictor_data_row(forecast_date=current_date)
+    X = prepare_data.predictor_data_row(forecast_date=current_date, forecast_model='logic')
     preds = []
     for model in models:
         if model == 'logic':
@@ -101,12 +101,19 @@ if __name__ == "__main__":
     import create_plots
     image_path = create_plots.plot_forecast(file_name="forecast.png")
 
+    # different subject on days when we need to water
+    subject = "Daily rainfall data update"
+    
     # create email body, including predictions from models
     body = "Here is the historical and forecast rainfall data for today:\n\n<img>"
     for model_pred in preds:
         model, pred = model_pred
-        pred_text = "1 (manually water today)" if pred == 1 else "0 (don't manually water today)"
-        body += f"\n\nBased on the data, {model} predicted {pred_text}."
+        if pred == 1:
+            subject = "It's time to water your plants!"
+            pred_text = "1 (manually water today)."
+        else:
+            pred_text = "0 (don't manually water today)."
+        body += f"\n\nBased on the data and historical recommendations, {model} predicted {pred_text}."
 
     # send email
-    send_email.send_email(subject="Daily rainfall data and watering advice", body=body, attach_path=image_path)
+    send_email.send_email(subject=subject, body=body, attach_path=image_path)
